@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Leviathan AI Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d0d14;--surface:#13131e;--surface2:#1a1a28;--border:#2a2a40;--accent:#9d5cfa;--accent2:#d946ef;--text:#e8e8f0;--text-dim:#8888a8;--font:'Inter',system-ui,sans-serif}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+    /* Header */
+    .header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+    .logo{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;animation:glow 3s ease-in-out infinite}
+    @keyframes glow{0%,100%{box-shadow:0 0 10px rgba(157,92,250,.3)}50%{box-shadow:0 0 20px rgba(157,92,250,.6)}}
+    .title{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--accent);text-transform:uppercase;flex:1}
+
+    /* URL Bar */
+    .url-bar{display:flex;gap:6px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+    .url-input{flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font)}
+    .url-input:focus{outline:none;border-color:var(--accent)}
+    .go-btn{padding:7px 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:filter .2s;white-space:nowrap}
+    .go-btn:hover{filter:brightness(1.15)}
+
+    /* Presets */
+    .presets{display:flex;gap:5px;padding:7px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+    .preset{padding:5px 11px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:11px;font-family:var(--font);cursor:pointer;transition:all .2s}
+    .preset:hover,.preset.active{border-color:var(--accent);color:var(--accent);background:rgba(157,92,250,.1)}
+
+    /* iFrame Area */
+    .frame-container{flex:1;position:relative;background:#fff}
+    .frame-container iframe{width:100%;height:100%;border:none;display:block}
+
+    /* Overlay shown while loading or when blocked */
+    .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg);z-index:10;padding:24px;text-align:center}
+    .overlay.hidden{display:none}
+    .overlay-icon{font-size:36px;animation:float 2.5s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .overlay h3{font-size:14px;color:var(--text);font-weight:600}
+    .overlay p{font-size:12px;color:var(--text-dim);line-height:1.6;max-width:260px}
+    .overlay-btn{padding:9px 22px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;width:100%;max-width:220px}
+    .overlay-btn:hover{transform:scale(1.03);box-shadow:0 4px 16px rgba(157,92,250,.4)}
+    .hint{font-size:10px;color:var(--text-dim);margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🌌</div>
+    <span class="title">Leviathan AI</span>
+  </div>
+
+  <div class="url-bar">
+    <input class="url-input" id="url-input" type="text" value="https://gemini.google.com" placeholder="https://...">
+    <button class="go-btn" id="go-btn">Buka</button>
+  </div>
+
+  <div class="presets">
+    <button class="preset active" data-url="https://gemini.google.com">✦ Gemini</button>
+    <button class="preset" data-url="https://chatgpt.com">ChatGPT</button>
+    <button class="preset" data-url="https://claude.ai">Claude</button>
+    <button class="preset" data-url="https://chat.deepseek.com">DeepSeek</button>
+    <button class="preset" data-url="https://copilot.microsoft.com">Copilot</button>
+  </div>
+
+  <div class="frame-container" id="frame-wrap">
+    <iframe id="ai-frame" src="about:blank" allow="clipboard-write; clipboard-read" referrerpolicy="no-referrer"></iframe>
+    <div class="overlay" id="overlay">
+      <div class="overlay-icon">🌌</div>
+      <h3>Buka AI Anda</h3>
+      <p>Pilih salah satu preset di atas atau masukkan URL kustom, lalu klik <strong>Buka</strong>.</p>
+      <button class="overlay-btn" id="try-load-btn">Muat dalam Panel</button>
+      <span class="hint">Jika halaman kosong, klik "Buka di Jendela Baru" di bawah</span>
+    </div>
+  </div>
+
+<script>
+  const urlInput = document.getElementById("url-input");
+  const goBtn = document.getElementById("go-btn");
+  const frame = document.getElementById("ai-frame");
+  const overlay = document.getElementById("overlay");
+  const tryLoadBtn = document.getElementById("try-load-btn");
+  const presets = document.querySelectorAll(".preset");
+
+  let currentUrl = localStorage.getItem("leviathan_ai_url") || "https://gemini.google.com";
+  urlInput.value = currentUrl;
+
+  function setActive(url) {
+    presets.forEach(p => p.classList.toggle("active", p.dataset.url === url));
+  }
+  setActive(currentUrl);
+
+  function loadUrl(url) {
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    currentUrl = url;
+    urlInput.value = url;
+    localStorage.setItem("leviathan_ai_url", url);
+    setActive(url);
+    overlay.classList.add("hidden");
+    frame.src = url;
+
+    // If frame stays blank after 4s, show fallback
+    clearTimeout(window._blankTimer);
+    window._blankTimer = setTimeout(() => {
+      try {
+        const fw = frame.contentWindow;
+        // If we can access contentDocument and it's empty/blank, show overlay
+        if (!fw || !fw.document || fw.document.body === null || fw.document.body.innerHTML.trim() === "") {
+          showFallback(url);
+        }
+      } catch(e) {
+        // Cross-origin — this is expected and means the page DID load (just cross-origin)
+        // So we don't show fallback
+      }
+    }, 4000);
+  }
+
+  function showFallback(url) {
+    overlay.innerHTML = `
+      <div class="overlay-icon">⚠️</div>
+      <h3>Tidak bisa dimuat dalam panel</h3>
+      <p>Situs ini memblokir pemuatan dalam panel. Klik tombol di bawah untuk membuka di jendela kecil yang menempel di samping.</p>
+      <button class="overlay-btn" id="open-popup-btn">Buka di Jendela Samping</button>
+      <span class="hint">Jendela akan muncul di sisi kanan layar Anda</span>
+    `;
+    overlay.classList.remove("hidden");
+    document.getElementById("open-popup-btn").addEventListener("click", () => {
+      chrome.runtime.sendMessage({ action: "open-compact-popup", url: url });
+    });
+  }
+
+  tryLoadBtn.addEventListener("click", () => loadUrl(currentUrl));
+  goBtn.addEventListener("click", () => loadUrl(urlInput.value.trim()));
+  urlInput.addEventListener("keydown", e => { if(e.key === "Enter") loadUrl(urlInput.value.trim()); });
+  presets.forEach(btn => btn.addEventListener("click", () => loadUrl(btn.dataset.url)));
+
+  // Auto-load saved URL on open
+  if (currentUrl && currentUrl !== "https://gemini.google.com") {
+    loadUrl(currentUrl);
+  }
+</script>
+</body>
+</html>

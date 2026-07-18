@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Leviathan Immersive Reader",
+  "version": "1.0.0",
+  "description": "Premium Neural-Void styled distraction-free reading mode with TTS, Line Focus, and AI Copilot.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "contextMenus",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "windows",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open Immersive Reader"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*", "file://*/*"],
+      "js": ["Readability.js", "content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "reader.html",
+        "reader.js",
+        "reader.css",
+        "sidepanel.html",
+        "Readability.js",
+        "pdf.min.js",
+        "pdf.worker.min.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

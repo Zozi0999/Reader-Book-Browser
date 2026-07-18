@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leviathan Immersive Reader</title>
+  <link rel="stylesheet" href="reader.css">
+  <!-- Load Google Fonts for clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Georgia&family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-sepia font-serif width-medium">
+  <!-- Line Focus Overlay container (will be dynamically positioned by JS) -->
+  <div id="line-focus-top" class="line-focus-mask"></div>
+  <div id="line-focus-bottom" class="line-focus-mask"></div>
+
+  <!-- Header / Toolbar -->
+  <header class="reader-toolbar">
+    <div class="toolbar-left">
+      <button id="btn-exit" class="toolbar-btn" title="Exit Immersive Reader">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        <span>Exit</span>
+      </button>
+      <div class="logo-divider"></div>
+      <div class="logo">
+        <span class="logo-icon">🔮</span>
+        <span class="logo-text">LEVIATHAN <span class="accent-text">READER</span></span>
+      </div>
+    </div>
+
+    <div class="toolbar-center">
+      <!-- TTS Player -->
+      <div class="tts-player">
+        <button id="btn-tts-play" class="toolbar-btn" title="Read Aloud">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-pause hidden"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          <span>Read Aloud</span>
+        </button>
+        <div id="tts-controls" class="tts-controls-panel hidden">
+          <button id="btn-tts-prev" class="control-btn" title="Previous Paragraph">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+          </button>
+          <button id="btn-tts-stop" class="control-btn" title="Stop">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16"></rect></svg>
+          </button>
+          <button id="btn-tts-next" class="control-btn" title="Next Paragraph">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          </button>
+          <select id="tts-voice" class="tts-select" title="Voice Selection">
+            <!-- Dynamically populated -->
+          </select>
+          <div class="speed-control">
+            <span class="speed-label">Speed:</span>
+            <select id="tts-speed" class="tts-select">
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1.0x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2.0x</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Text Preferences -->
+      <button id="btn-settings" class="toolbar-btn" title="Text Preferences">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+        <span>Text Styles</span>
+      </button>
+
+      <!-- Reading Preferences -->
+      <button id="btn-reading" class="toolbar-btn" title="Reading & Grammar Preferences">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Reading Tools</span>
+      </button>
+
+      <!-- Live Interactive View -->
+      <button id="toggle-interactive-btn" class="toolbar-btn" title="Toggle Live Interactive Mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 7 5 3-5 3Z"/><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M12 17v4"/><path d="M8 21h8"/></svg>
+        <span>Interactive View</span>
+      </button>
+
+      <!-- Page Translate Dropdown -->
+      <div class="page-translate-container">
+        <select id="select-page-translate" class="tts-select translate-select" title="Translate Page">
+          <option value="" disabled selected>🌐 Translate</option>
+          <option value="original">↩️ Original</option>
+          <optgroup label="── In-Reader ──">
+            <option value="id">Indonesian</option>
+            <option value="en">English</option>
+            <option value="ja">Japanese</option>
+            <option value="ko">Korean</option>
+            <option value="es">Spanish</option>
+            <option value="zh-CN">Chinese</option>
+            <option value="ar">Arabic</option>
+            <option value="fr">French</option>
+          </optgroup>
+          <optgroup label="── Via Google Translate ──">
+            <option value="gt:id">🌍 Google → Indonesian</option>
+            <option value="gt:en">🌍 Google → English</option>
+            <option value="gt:ja">🌍 Google → Japanese</option>
+            <option value="gt:ko">🌍 Google → Korean</option>
+            <option value="gt:es">🌍 Google → Spanish</option>
+            <option value="gt:zh-CN">🌍 Google → Chinese</option>
+            <option value="gt:fr">🌍 Google → French</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="logo-divider"></div>
+
+      <!-- AI Copilot Sidebar Toggle -->
+      <button id="btn-copilot" class="toolbar-btn btn-ai" title="AI Copilot Sidebar">
+        <span class="pulse-ring"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <span>AI Copilot</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Preferences Dialogs -->
+  <!-- Text Settings Popover -->
+  <div id="settings-popover" class="popover-panel hidden">
+    <div class="popover-section">
+      <h3>Font Size</h3>
+      <div class="size-slider-container">
+        <button id="btn-font-dec" class="size-btn">A-</button>
+        <input type="range" id="slider-font-size" min="14" max="32" value="18" step="1">
+        <button id="btn-font-inc" class="size-btn">A+</button>
+        <span id="font-size-val">18px</span>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Font Family</h3>
+      <div class="option-grid">
+        <button class="grid-btn font-option active" data-font="font-serif">Georgia</button>
+        <button class="grid-btn font-option" data-font="font-sans">Inter</button>
+        <button class="grid-btn font-option" data-font="font-mono">Fira Code</button>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Column Width</h3>
+      <div class="option-grid">
+        <button class="grid-btn width-option" data-width="width-narrow">Narrow</button>
+        <button class="grid-btn width-option active" data-width="width-medium">Medium</button>
+        <button class="grid-btn width-option" data-width="width-wide">Wide</button>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Themes</h3>
+      <div class="theme-grid">
+        <button class="theme-btn theme-light" data-theme="theme-light" title="Alabaster Light">
+          <span class="theme-preview">A</span>Light
+        </button>
+        <button class="theme-btn theme-sepia active" data-theme="theme-sepia" title="Cozy Sepia">
+          <span class="theme-preview">A</span>Sepia
+        </button>
+        <button class="theme-btn theme-dim" data-theme="theme-dim" title="Muted Slate">
+          <span class="theme-preview">A</span>Slate
+        </button>
+        <button class="theme-btn theme-dark" data-theme="theme-dark" title="Neural Void Dark">
+          <span class="theme-preview">A</span>Neural Void
+        </button>
+        <button class="theme-btn theme-galaxy-obsidian" data-theme="theme-galaxy-obsidian" title="Purple Galaxy Obsidian Blade">
+          <span class="theme-preview">A</span>Obsidian Blade
+        </button>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Gemini AI Key</h3>
+      <p class="popover-desc">Masukkan Google Gemini API key untuk aktifkan AI nyata (bukan simulasi).</p>
+      <div class="api-key-row">
+        <input type="password" id="input-api-key" class="api-key-input" placeholder="AIza...">
+        <button id="btn-save-api-key" class="api-key-save-btn">Simpan</button>
+      </div>
+      <p id="api-key-status" class="api-key-status"></p>
+    </div>
+  </div>
+
+  <!-- Reading/Grammar Tools Popover -->
+  <div id="reading-popover" class="popover-panel hidden">
+    <div class="popover-section">
+      <h3>Line Focus</h3>
+      <p class="popover-desc">Highlight specific reading lines to help focus.</p>
+      <div class="option-grid">
+        <button class="grid-btn focus-option active" data-focus="focus-off">Off</button>
+        <button class="grid-btn focus-option" data-focus="focus-1">1 Line</button>
+        <button class="grid-btn focus-option" data-focus="focus-3">3 Lines</button>
+        <button class="grid-btn focus-option" data-focus="focus-5">5 Lines</button>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Grammar Highlights</h3>
+      <p class="popover-desc">Identify and colorize parts of speech.</p>
+      <div class="toggle-list">
+        <div class="toggle-item">
+          <span>Highlight Nouns (Purple)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-nouns">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <span>Highlight Verbs (Green)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-verbs">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <span>Highlight Adjectives (Orange)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-adjectives">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="toggle-item">
+          <span>Split Syllables (•)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-syllables">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="popover-section">
+      <h3>Display Options</h3>
+      <p class="popover-desc">Customize the reader interface layout.</p>
+      <div class="toggle-list">
+        <div class="toggle-item">
+          <span>Show Scrollbar</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-scrollbar" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <div class="reader-layout-container">
+    <main class="reader-content-area">
+      <article id="article-container" class="article-body">
+        <!-- Site Info -->
+        <div class="article-meta">
+          <span id="article-site-name" class="site-name"></span>
+          <a id="article-original-link" class="original-link" href="#" target="_blank">
+            View Original
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+
+        <!-- Article Title -->
+        <h1 id="article-title" class="article-title">Loading Article...</h1>
+
+        <!-- Article Author / Byline -->
+        <div id="article-byline" class="article-byline"></div>
+
+        <!-- Divider line -->
+        <hr class="title-divider">
+
+        <!-- Article Main Content HTML -->
+        <div id="article-html-content" class="article-html">
+          <p>Analyzing document structure and layout. Please wait...</p>
+        </div>
+      </article>
+      <div id="interactive-container" class="interactive-container hidden">
+        <iframe id="interactive-iframe" src="" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+    </main>
+
+
+    <!-- AI Copilot Sidebar -->
+    <aside id="copilot-sidebar" class="copilot-sidebar hidden">
+      <div id="copilot-resize-handle" class="copilot-resize-handle" title="Geser untuk mengubah lebar"></div>
+
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="hud-circle-container">
+          <div class="hud-circle-outer"></div>
+          <div class="hud-circle-inner"></div>
+        </div>
+        <h2>LEVIATHAN AI</h2>
+        <button id="btn-toggle-controls" class="btn-toggle-controls" title="Sembunyikan/Tampilkan Pengaturan URL">
+          <span>⚙️ URL</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <button id="btn-close-copilot" class="close-btn" title="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Collapsible Controls (URL Bar + Presets) -->
+      <div id="copilot-controls" class="copilot-controls">
+        <!-- URL Bar -->
+        <div class="copilot-webview-config">
+          <input type="text" id="copilot-webview-url" placeholder="https://gemini.google.com" value="https://gemini.google.com">
+          <button id="btn-save-copilot-url" class="save-btn">Buka</button>
+        </div>
+
+        <!-- Preset Buttons -->
+        <div class="ai-presets">
+          <button class="ai-preset-btn" data-url="https://gemini.google.com">✦ Gemini</button>
+          <button class="ai-preset-btn" data-url="https://chatgpt.com">ChatGPT</button>
+          <button class="ai-preset-btn" data-url="https://claude.ai">Claude</button>
+          <button class="ai-preset-btn" data-url="https://chat.deepseek.com">DeepSeek</button>
+          <button class="ai-preset-btn" data-url="https://copilot.microsoft.com">Copilot</button>
+        </div>
+      </div>
+
+      <!-- iFrame Container -->
+      <div class="copilot-webview-container">
+        <iframe id="copilot-webview-iframe" src="about:blank" allow="clipboard-write; clipboard-read" referrerpolicy="no-referrer"></iframe>
+
+        <!-- Overlay: idle state (no URL loaded yet) -->
+        <div id="copilot-overlay" class="copilot-overlay">
+          <div class="copilot-overlay-icon">🌌</div>
+          <p class="copilot-overlay-hint">Pilih AI di atas atau ketik URL lalu klik <strong>Buka</strong>.</p>
+          <button id="btn-open-ai-popup" class="ai-launch-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Buka di Jendela Samping
+          </button>
+          <p class="copilot-overlay-sub">Gunakan ini jika panel di atas kosong</p>
+        </div>
+
+        <!-- Overlay: blocked state (iframe refused / Cloudflare) -->
+        <div id="copilot-blocked-overlay" class="copilot-overlay copilot-blocked hidden">
+          <div class="copilot-overlay-icon">🚫</div>
+          <p class="copilot-overlay-hint" id="blocked-site-name">Situs ini memblokir embedding iframe.</p>
+          <p class="copilot-overlay-sub">DeepSeek, Copilot, dan beberapa AI lain menggunakan proteksi bot/Cloudflare yang tidak bisa berjalan di dalam panel.</p>
+          <button id="btn-open-ai-popup-blocked" class="ai-launch-btn ai-launch-btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Buka di Jendela Terpisah
+          </button>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <script src="pdf.min.js"></script>
+  <script src="reader.js"></script>
+</body>
+</html>
