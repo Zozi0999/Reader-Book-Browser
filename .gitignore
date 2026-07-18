@@ -1,0 +1,8 @@
+*.zip
+*.crx
+*.pem
+*.xpi
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
